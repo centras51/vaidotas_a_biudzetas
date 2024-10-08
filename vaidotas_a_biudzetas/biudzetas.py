@@ -1,7 +1,12 @@
+import streamlit as st
 import pickle
 from vaidotas_a_biudzetas.pajamuirasas import PajamuIrasas
 from vaidotas_a_biudzetas.islaidusarasas import IslaiduIrasas
 import datetime
+from typing import Literal
+
+st.set_page_config(layout="wide")
+
 
 
 class Biudzetas:
@@ -12,21 +17,17 @@ class Biudzetas:
         irasas = PajamuIrasas(suma, data, siuntejas, papildoma_informacija)
         self.zurnalas.append(irasas)
         self.issaugoti_duomenis()
-        print(f"Pajamų įrašas {irasas} sėkmingai pridėtas.")
 
     def prideti_islaidu_irasa(self, data, suma, atsiskaitymo_budas, isigyta_preke_paslauga):
         irasas = IslaiduIrasas(suma, data, atsiskaitymo_budas, isigyta_preke_paslauga)
         self.zurnalas.append(irasas)
         self.issaugoti_duomenis()
-        print(f"Išlaidų įrašas {irasas} sėkmingai pridėtas.")
 
     def gauti_balansa(self):
         try:
             with open("biudzetas.pkl", "rb") as file:
                 self.zurnalas = pickle.load(file)
-            print("Duomenys įkelti")
         except (FileNotFoundError, EOFError):
-            print("Failas nerastas")
             self.zurnalas = []
         pajamos = sum(irasas.suma for irasas in self.zurnalas if isinstance(irasas, PajamuIrasas))
         islaidos = sum(irasas.suma for irasas in self.zurnalas if isinstance(irasas, IslaiduIrasas))
@@ -37,20 +38,18 @@ class Biudzetas:
         try:
             with open("biudzetas.pkl", "rb") as file:
                 self.zurnalas = pickle.load(file)
-            print("Duomenys įkelti")
         except (FileNotFoundError, EOFError):
-            print("Failas nerastas")
             self.zurnalas = []
         if not self.zurnalas:
-            print("Žurnalas tuščias. Nėra įrašų ataskaitai.")
-            return
-        print(" " * 40, "Biudžeto Ataskaita:")
-        print("-" * 100)
+            return "Žurnalas tuščias. Nėra įrašų ataskaitai."
+        ataskaita = " " * 40 + "Biudžeto Ataskaita:\n"
+        ataskaita += "-" * 100 + "\n"
         for k, irasas in enumerate(self.zurnalas, start=1):
-            print(f"{k}. {irasas}")
-        print("-" * 100)
+            ataskaita += f"{k}. {irasas}\n"
+        ataskaita += "-" * 100 + "\n"
         balansas = self.gauti_balansa()
-        print(f"Balansas: {balansas}\n")
+        ataskaita += f"Balansas: {balansas}\n"
+        return ataskaita
 
     def issaugoti_duomenis(self):
         with open("biudzetas.pkl", "wb") as file:
@@ -60,67 +59,43 @@ class Biudzetas:
         try:
             with open("biudzetas.pkl", "rb") as file:
                 self.zurnalas = pickle.load(file)
-            print("Duomenys įkelti")
         except (FileNotFoundError, EOFError):
-            print("Failas nerastas")
             self.zurnalas = []
 
 biudzetas = Biudzetas()
 biudzetas.ikelti_duomenis()
 
-while True:
-    print("Biudžeto programa")
-    print("1. Įvesti pajamas")
-    print("2. Įvesti išlaidas")
-    print("3. Rodyti balansą")
-    print("4. Rodyti biudžeto ataskaitą")
-    print("5. Išeiti")
-    print("----------------------------")
+st.title("Biudžeto valdymo programa")
+col1, col2 = st.columns(2)
 
-    pasirinkimas = input("Pasirinkite veiksmą (1-5): ")
+with col1:
+    st.subheader("Įvesti pajamas")
+    with st.form(key="pajamu_forma"):
+        pajamu_data = st.date_input("Pasirinkite datą", datetime.date.today())
+        pajamu_suma = st.number_input("Įveskite pajamų sumą", min_value=0.0, format="%.2f")
+        pajamu_siuntejas = st.text_input("Įveskite siuntėją").upper()
+        pajamu_info = st.text_area("Papildoma informacija").upper()
+        if st.form_submit_button("Pridėti pajamas"):
+            biudzetas.prideti_pajamu_irasa(pajamu_data, pajamu_suma, pajamu_siuntejas, pajamu_info)
+            st.success(f"Pajamų įrašas pridėtas: {pajamu_suma} Eur iš {pajamu_siuntejas}")
 
-    if pasirinkimas == "1":
-        data_input = input("Įveskite datą (YYYY-MM-DD): ")
-        try:
-            data = datetime.datetime.strptime(data_input, "%Y-%m-%d").date()
-        except ValueError:
-            print("Klaida: įveskite teisingą datą formatu YYYY-MM-DD.")
-            continue
-        try:
-            suma = abs(float(input("Įveskite pajamų sumą: ")))
-            siuntejas = input("Įveskite siuntėją: ").upper()
-            papildoma_informacija = input("Įveskite papildomą informaciją apie gautas pajamas: ").upper()
-            biudzetas.prideti_pajamu_irasa(data, suma, siuntejas, papildoma_informacija)
-            print(f"{suma} Eur pajamos iš {siuntejas} sėkmingai pridėtos.\n")
-        except ValueError:
-            print(f"Klaida: įveskite skaičių.\n")
 
-    elif pasirinkimas == "2":
-        data_input = input("Įveskite datą (YYYY-MM-DD): ")
-        try:
-            data = datetime.datetime.strptime(data_input, "%Y-%m-%d").date()
-        except ValueError:
-            print("Klaida: įveskite teisingą datą formatu YYYY-MM-DD.")
-            continue
-        try:
-            suma = abs(float(input("Įveskite išlaidų sumą: ")))
-            atsiskaitymo_budas = input("Įveskite atsiskaitymo būdą (grynais, pavedimu, kortele): ").upper()
-            isigyta_preke_paslauga = input("Įsigyta prekė ar paslauga: ").upper()
-            biudzetas.prideti_islaidu_irasa(data, suma, atsiskaitymo_budas, isigyta_preke_paslauga)
-            print(f"{suma} Eur išlaidos už {isigyta_preke_paslauga} sėkmingai pridėtos.\n")
-        except ValueError:
-            print(f"Klaida: įveskite skaičių.\n")
 
-    elif pasirinkimas == "3":
-        balansas = biudzetas.gauti_balansa()
-        print(f"\nJūsų balansas yra: {balansas}\n")
+with col2:
+    st.subheader("Įvesti išlaidas")
+    with st.form(key="islaidu_forma"):
+        islaidu_data = st.date_input("Pasirinkite datą", datetime.date.today(), key="islaidu_data")
+        islaidu_suma = st.number_input("Įveskite išlaidų sumą", min_value=0.0, format="%.2f", key="islaidu_suma")
+        islaidu_budas = st.radio("Apmokėjimo būdas", ('Grynais', 'Kortele', 'Pavedimu'), key="horizontal_radio")
+        islaidu_prekes = st.text_area("Įsigyta prekė ar paslauga").upper()
+        if st.form_submit_button("Pridėti išlaidas"):
+            biudzetas.prideti_islaidu_irasa(islaidu_data, islaidu_suma, islaidu_budas, islaidu_prekes)
+            st.success(f"Išlaidų įrašas pridėtas: {islaidu_suma} Eur už {islaidu_prekes}. Apmokėjimas {islaidu_budas}")
 
-    elif pasirinkimas == "4":
-        biudzetas.parodyti_ataskaita()
+if st.button("Rodyti balansą"):
+    balansas = biudzetas.gauti_balansa()
+    st.info(f"Jūsų balansas: {balansas}")
 
-    elif pasirinkimas == "5":
-        print("Išeinama iš programos.")
-        break
-
-    else:
-        print("Neteisingas pasirinkimas. Bandykite dar kartą.\n")
+if st.button("Rodyti biudžeto ataskaitą"):
+    ataskaita = biudzetas.parodyti_ataskaita()
+    st.text(ataskaita)
