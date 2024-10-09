@@ -1,14 +1,9 @@
 [tool.poetry]
 name = "vaidotas-a-biudzetas"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["centr <centras51@gmail.com>"]
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.12"
-ignas-t-biudzetas = "^0.1.0"
-
 
 [build-system]
 requires = ["poetry-core"]
