@@ -9,5 +9,4 @@ class PajamuIrasas(Irasas):
 
     def __str__(self):
         return (
-            f"Data: {self.data}, Pajamos - Suma: {self.suma} Eur, Siuntėjas: {self.siuntejas}, "
-            f"Papildoma Informacija: {self.papildoma_informacija}")
+            f":green[Data: {self.data}, Pajamos - Suma: {self.suma} Eur, Siuntėjas: {self.siuntejas}, Papildoma Informacija: {self.papildoma_informacija}]")

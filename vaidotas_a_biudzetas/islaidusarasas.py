@@ -9,5 +9,4 @@ class IslaiduIrasas(Irasas):
 
     def __str__(self):
         return (
-            f"Data: {self.data}, Išlaidos - Suma: {self.suma} Eur, Atsiskaitymo būdas: {self.atsiskaitymo_budas}, "
-            f"Įsigyta prekė/paslauga: {self.isigyta_preke_paslauga}")
+            f":red[Data: {self.data}, Išlaidos - Suma: {self.suma} Eur, Atsiskaitymo būdas: {self.atsiskaitymo_budas}, Įsigyta prekė/paslauga: {self.isigyta_preke_paslauga}]")
